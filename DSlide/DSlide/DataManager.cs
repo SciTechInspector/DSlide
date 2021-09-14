@@ -8,8 +8,8 @@ namespace DSlide
     {
         DataVersion currentVersion;
 
-        Dictionary<DataNodeKey, DataNode> allDataNodes;
-        List<DataNode> sourceDataNodes;
+        Dictionary<DataNodeKey, DataNode> allDataNodes = new Dictionary<DataNodeKey, DataNode>();
+        List<DataNode> sourceDataNodes = new List<DataNode>();
 
         public void SetSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
         {
@@ -19,9 +19,10 @@ namespace DSlide
             {
                 dataNode = new DataNode(dataNodeKey);
                 this.allDataNodes[dataNodeKey] = dataNode;
+                this.sourceDataNodes.Add(dataNode);
             }
 
-            dataNode.SetValue(container, currentVersion);
+            dataNode.SetValue(newValue, currentVersion);
         }
 
         public T GetSourceValue<T>(object container, string propertyName, Action notifier) 
@@ -33,7 +34,11 @@ namespace DSlide
                 return default(T);
             }
 
-            return (T)dataNode.GetValue(currentVersion);
+            var retrievedValue = dataNode.GetValue(currentVersion);
+            if (retrievedValue == null)
+                return default(T);
+
+            return (T)retrievedValue;
         }
 
         public T GetComputedValue<T>(Func<T> computer, object container, string propertyName, Action notifier) 

@@ -6,13 +6,13 @@ namespace DSlide
 {
     public class DataNode
     {
-        public SortedList<DataVersion, object> DataHistory { get; set; }
+        public SortedList<DataVersion, object> DataHistory { get; set; } = new SortedList<DataVersion, object>();
 
         public DataNodeKey NodeKey { get; private set; }
 
         public Action NotifyChanged { get; set; }
 
-        public List<DataNode> DependOns { get; set; }
+        public List<DataNode> DependOns { get; set; } = new List<DataNode>();
 
         public DataNode(DataNodeKey nodeKey)
         {
@@ -28,7 +28,7 @@ namespace DSlide
         {
             var versionToUse = this.DataHistory.FindNearestLessOrEqualKey(currentVersion);
             if (versionToUse == null)
-                return default(object);
+                return null;
 
             return this.DataHistory[versionToUse.Value];
         }
