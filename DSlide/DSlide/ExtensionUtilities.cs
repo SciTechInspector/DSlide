@@ -7,19 +7,17 @@ namespace DSlide
 {
     public static class ExtensionUtilities
     {
-        public static TKey? FindNearestLessOrEqualKey<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey reference) where TKey : struct, IComparable<TKey>
+        public static int FindIndexOfNearestLessOrEqualToKey<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey reference) where TKey : struct, IComparable<TKey>
         {
-            var comparisonResult = sortedList.Keys[0].CompareTo(reference);
+            var comparisonResult = reference.CompareTo(sortedList.Keys[0]);
             if (comparisonResult < 0)
-                return null;
+                return -1;
             else if (comparisonResult == 0)
-                return sortedList.Keys[0];
+                return 0;
 
-            comparisonResult = sortedList.Keys[sortedList.Count - 1].CompareTo(reference);
-            if (comparisonResult < 0)
-                return null;
-            else if (comparisonResult == 0)
-                return sortedList.Keys[sortedList.Count - 1];
+            comparisonResult = reference.CompareTo(sortedList.Keys[sortedList.Count - 1]);
+            if (comparisonResult >= 0)
+                return sortedList.Count - 1;
 
             int lower = 0;
             int upper = sortedList.Count - 1;
@@ -30,12 +28,12 @@ namespace DSlide
                 Debug.Assert(reference.CompareTo(sortedList.Keys[upper == sortedList.Count - 1 ? upper : upper + 1]) < 0);
 
                 comparisonResult = reference.CompareTo(sortedList.Keys[index]);
-                if (comparisonResult == 0) { return sortedList.Keys[index]; }
+                if (comparisonResult == 0) { return index; }
 
                 if (comparisonResult < 0)
                 {
                     if (lower == index)
-                        return sortedList.Keys[lower - 1];
+                        return lower - 1;
 
                     upper = index - 1;
                     Debug.Assert(lower <= upper);
@@ -44,7 +42,7 @@ namespace DSlide
                 {
                     Debug.Assert(comparisonResult > 0);
                     if (upper == index)
-                        return sortedList.Keys[upper];
+                        return upper;
 
                     lower = index + 1;
                     Debug.Assert(lower <= upper);

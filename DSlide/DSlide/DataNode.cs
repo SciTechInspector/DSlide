@@ -26,11 +26,11 @@ namespace DSlide
 
         internal object GetValue(DataVersion currentVersion)
         {
-            var versionToUse = this.DataHistory.FindNearestLessOrEqualKey(currentVersion);
-            if (versionToUse == null)
+            var versionToUseIndex = this.DataHistory.FindIndexOfNearestLessOrEqualToKey(currentVersion);
+            if (versionToUseIndex == null)
                 return null;
 
-            return this.DataHistory[versionToUse.Value];
+            return this.DataHistory.Values[versionToUseIndex];
         }
     }
 }
