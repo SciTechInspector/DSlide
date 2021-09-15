@@ -27,7 +27,7 @@ namespace DSlide
         internal object GetValue(DataVersion currentVersion)
         {
             var versionToUseIndex = this.DataHistory.FindIndexOfNearestLessOrEqualToKey(currentVersion);
-            if (versionToUseIndex == null)
+            if (versionToUseIndex == -1)
                 return null;
 
             return this.DataHistory.Values[versionToUseIndex];
