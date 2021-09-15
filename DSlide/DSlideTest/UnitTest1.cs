@@ -8,7 +8,7 @@ namespace DSlideTest
     public class UnitTest1
     {
         [TestMethod]
-        public void SimpleGetAndSet()
+        public void SimplePropertyTests()
         {
             var obj = new DiamondTest();
             Assert.IsTrue(obj.FirstName == null);
@@ -19,6 +19,8 @@ namespace DSlideTest
 
             Assert.IsTrue(obj.FirstName == "Bob");
             Assert.IsTrue(obj.LastName == "Morane");
+
+            Assert.IsTrue(obj.FullName == "Bob Morane");
         }
 
         [TestMethod]

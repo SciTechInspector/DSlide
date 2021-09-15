@@ -6,10 +6,15 @@ namespace DSlide
 {
     public class DataManager
     {
-        DataVersion currentVersion;
+        public DataVersion CurrentVersion { get; private set; }
 
-        Dictionary<DataNodeKey, DataNode> allDataNodes = new Dictionary<DataNodeKey, DataNode>();
-        List<DataNode> sourceDataNodes = new List<DataNode>();
+        private Dictionary<DataNodeKey, DataNode> allDataNodes = new Dictionary<DataNodeKey, DataNode>();
+        private List<DataNode> sourceDataNodes = new List<DataNode>();
+
+        public DataManager()
+        {
+            this.CurrentVersion = new DataVersion(1, this);
+        }
 
         public void SetSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
         {
@@ -22,7 +27,7 @@ namespace DSlide
                 this.sourceDataNodes.Add(dataNode);
             }
 
-            dataNode.SetValue(newValue, currentVersion);
+            dataNode.SetValue(newValue, CurrentVersion);
         }
 
         public T GetSourceValue<T>(object container, string propertyName, Action notifier) 
@@ -34,7 +39,7 @@ namespace DSlide
                 return default(T);
             }
 
-            var retrievedValue = dataNode.GetValue(currentVersion);
+            var retrievedValue = dataNode.GetValue(CurrentVersion);
             if (retrievedValue == null)
                 return default(T);
 
@@ -43,7 +48,26 @@ namespace DSlide
 
         public T GetComputedValue<T>(Func<T> computer, object container, string propertyName, Action notifier) 
         {
-            return default(T);
+            DataNode dataNode;
+            var dataNodeKey = new DataNodeKey(container, propertyName);
+            if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
+            {
+                dataNode = new DataNode(dataNodeKey);
+                this.allDataNodes[dataNodeKey] = dataNode;
+            }
+
+            if (dataNode.HasValueForVersion(this.CurrentVersion))
+            {
+                var retrievedValue = dataNode.GetValue(CurrentVersion);
+                if (retrievedValue == null)
+                    return default(T);
+
+                return (T)retrievedValue;
+            }
+
+            var newValue = computer();
+            dataNode.SetValue(newValue, CurrentVersion);
+            return newValue;
         }
     }
 }

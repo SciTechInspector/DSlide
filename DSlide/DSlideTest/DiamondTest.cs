@@ -35,7 +35,7 @@ namespace DSlideTest
 
         public Boolean IsMale { get; set; }
 
-        public string FullName { get { return base.GetComputedValue<string>(() => this.FirstName + this.LastName); } }
+        public string FullName { get { return base.GetComputedValue<string>(() => $"{this.FirstName} {this.LastName}"); } }
 
         public string PoliteAddress { get { return base.GetComputedValue<string>(() => (this.IsMale ? "Lord" : "Lady") + this.LastName); } }
 

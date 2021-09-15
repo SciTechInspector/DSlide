@@ -24,13 +24,18 @@ namespace DSlide
             this.DataHistory[version] = value;
         }
 
-        internal object GetValue(DataVersion currentVersion)
+        public object GetValue(DataVersion version)
         {
-            var versionToUseIndex = this.DataHistory.FindIndexOfNearestLessOrEqualToKey(currentVersion);
+            var versionToUseIndex = this.DataHistory.FindIndexOfNearestLessOrEqualToKey(version);
             if (versionToUseIndex == -1)
                 return null;
 
             return this.DataHistory.Values[versionToUseIndex];
+        }
+
+        public bool HasValueForVersion(DataVersion version)
+        {
+            return this.DataHistory.ContainsKey(version);
         }
     }
 }

@@ -10,6 +10,12 @@ namespace DSlide
         public long VersionNumber { get; set; }
         public DataManager DataManager { get; set; }
 
+        public DataVersion(long versionNumber, DataManager dataManager)
+        {
+            this.VersionNumber = versionNumber;
+            this.DataManager = dataManager;
+        }
+
         public int CompareTo(object obj)
         {
             if (obj == null)
