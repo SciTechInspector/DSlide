@@ -7,7 +7,7 @@ namespace DSlide
 {
     public static class ExtensionUtilities
     {
-        public static int FindIndexOfNearestLessOrEqualToKey<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey reference) where TKey : struct, IComparable<TKey>
+        public static int FindIndexOfNearestLessOrEqualToKey<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey reference) where TKey : IComparable<TKey>
         {
             var comparisonResult = reference.CompareTo(sortedList.Keys[0]);
             if (comparisonResult < 0)
