@@ -9,6 +9,9 @@ namespace DSlide
     {
         public static int FindIndexOfNearestLessOrEqualToKey<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey reference) where TKey : IComparable<TKey>
         {
+            if (sortedList.Count == 0)
+                return -1;
+
             var comparisonResult = reference.CompareTo(sortedList.Keys[0]);
             if (comparisonResult < 0)
                 return -1;
