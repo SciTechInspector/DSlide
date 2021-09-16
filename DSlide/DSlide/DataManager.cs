@@ -1,73 +1,171 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DSlide
 {
     public class DataManager
     {
-        public DataVersion CurrentVersion { get; private set; }
-
+        private List<Action> changeNotificationsToSend;
         private Dictionary<DataNodeKey, DataNode> allDataNodes = new Dictionary<DataNodeKey, DataNode>();
-        private List<DataNode> sourceDataNodes = new List<DataNode>();
+        private HashSet<DataNode> modifiedSourceDataNodes = new HashSet<DataNode>();
+        private ValueComputationContext computationContext = new ValueComputationContext();
+
+        [ThreadStatic]
+        private static DataManager ts_DataManager;
+
+        public static DataManager Current
+        {
+            get
+            {
+                if (DataManager.ts_DataManager == null)
+                {
+                    DataManager.ts_DataManager = new DataManager();
+                }
+
+                return DataManager.ts_DataManager;
+            }
+        }
+
+        public DataVersion ReadVersion { get; private set; }
+        public DataVersion EditVersion { get; private set; }
 
         public DataManager()
         {
-            this.CurrentVersion = new DataVersion(1, this);
+            this.ReadVersion = new DataVersion(1, this);
+            this.EditVersion = null;
         }
 
         public void SetSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
         {
+            if (this.EditVersion == null)
+                throw new InvalidOperationException("Cannot modify a source value ouside of edit mode.");
+
             DataNode dataNode;
             var dataNodeKey = new DataNodeKey(container, propertyName);
             if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
             {
-                dataNode = new DataNode(dataNodeKey);
+                dataNode = new DataNode(dataNodeKey, notifier);
                 this.allDataNodes[dataNodeKey] = dataNode;
-                this.sourceDataNodes.Add(dataNode);
             }
 
-            dataNode.SetValue(newValue, CurrentVersion);
+            this.modifiedSourceDataNodes.Add(dataNode);
+
+            dataNode.SetValue(newValue, this.EditVersion);
         }
 
-        public T GetSourceValue<T>(object container, string propertyName, Action notifier) 
+        public object GetSourceValue(object container, string propertyName, Action notifier) 
         {
             DataNode dataNode;
             var dataNodeKey = new DataNodeKey(container, propertyName);
             if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
             {
-                return default(T);
+                dataNode = new DataNode(dataNodeKey, notifier);
+                this.allDataNodes[dataNodeKey] = dataNode;
             }
 
-            var retrievedValue = dataNode.GetValue(CurrentVersion);
+            this.computationContext.RegisterDependency(dataNode);
+
+            var retrievedValue = dataNode.GetValue(ReadVersion);
             if (retrievedValue == null)
-                return default(T);
+                return default(object);
 
-            return (T)retrievedValue;
+            return retrievedValue;
         }
 
-        public T GetComputedValue<T>(Func<T> computer, object container, string propertyName, Action notifier) 
+        public object GetComputedValue(Func<object> computer, object container, string propertyName, Action notifier) 
         {
             DataNode dataNode;
             var dataNodeKey = new DataNodeKey(container, propertyName);
             if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
             {
-                dataNode = new DataNode(dataNodeKey);
+                dataNode = new DataNode(dataNodeKey, computer, notifier);
                 this.allDataNodes[dataNodeKey] = dataNode;
             }
 
-            if (dataNode.HasValueForVersion(this.CurrentVersion))
-            {
-                var retrievedValue = dataNode.GetValue(CurrentVersion);
-                if (retrievedValue == null)
-                    return default(T);
+            this.computationContext.RegisterDependency(dataNode);
 
-                return (T)retrievedValue;
+            if (dataNode.HasValueForVersion(this.ReadVersion))
+            {
+                var retrievedValue = dataNode.GetValue(ReadVersion);
+                if (retrievedValue == null)
+                    return default(object);
+
+                return retrievedValue;
             }
 
+            this.computationContext.EnterDataNodeComputation(dataNode);
             var newValue = computer();
-            dataNode.SetValue(newValue, CurrentVersion);
+            this.computationContext.ExitDataNodeComputation(dataNode);
+
+            dataNode.SetValue(newValue, ReadVersion);
             return newValue;
+        }
+
+        public void EnterEditMode()
+        {
+            this.EditVersion = new DataVersion(this.ReadVersion.VersionNumber + 1, this);
+        }
+
+        public void ExitEditMode()
+        {
+            this.ReadVersion = this.EditVersion;
+            this.EditVersion = null;
+
+
+            HashSet<DataNode> processedNodes = new HashSet<DataNode>();
+
+            SortedList<long, HashSet<DataNode>> dataNodesToProcess = new SortedList<long, HashSet<DataNode>>();
+
+            dataNodesToProcess[0] = this.modifiedSourceDataNodes;
+            this.modifiedSourceDataNodes = new HashSet<DataNode>();
+
+            this.changeNotificationsToSend = new List<Action>();
+
+            while (dataNodesToProcess.Count != 0)
+            {
+                var firstHeightNodes = dataNodesToProcess.Values[0];
+                var processNode = firstHeightNodes.First();
+
+                if (firstHeightNodes.Count == 1)
+                    dataNodesToProcess.RemoveAt(0);
+                else
+                    firstHeightNodes.Remove(processNode);
+
+                if (processNode.IsComputedData())
+                {
+                    var newValue = processNode.Computer();
+                    processNode.SetValue(newValue, this.ReadVersion);
+                }
+
+                if (!processNode.HasValueForVersion(this.ReadVersion))
+                    continue;
+
+                // TODO: Prepare/send change notification
+                changeNotificationsToSend.Add(processNode.NotifyChanged);
+
+                foreach (var dependOnNode in processNode.DataNodesThatDependOnThisNode)
+                {
+                    HashSet<DataNode> nodesToProcessOfDependOnHeight;
+                    if (!dataNodesToProcess.TryGetValue(dependOnNode.Height, out nodesToProcessOfDependOnHeight))
+                    {
+                        nodesToProcessOfDependOnHeight = new HashSet<DataNode>();
+                        dataNodesToProcess[dependOnNode.Height] = nodesToProcessOfDependOnHeight;
+                    }
+
+                    nodesToProcessOfDependOnHeight.Add(dependOnNode);
+                }
+            }
+        }
+
+        public void SendChangeNotifications()
+        {
+            var notifications = this.changeNotificationsToSend;
+            this.changeNotificationsToSend = null;
+
+            foreach (var notificationToSend in notifications)
+                notificationToSend();
         }
     }
 }

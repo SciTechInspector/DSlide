@@ -6,9 +6,15 @@ namespace DSlide
 {
     public class BaseClass : INotifyPropertyChanged
     {
-        DataManager dataManager = new DataManager();
+        protected DataManager dataManager;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public BaseClass()
+        {
+            this.dataManager = DataManager.Current;
+        }
+
 
         public void NotifyChanged([CallerMemberName] string propertyName = null)
         {
@@ -17,16 +23,16 @@ namespace DSlide
 
         public void SetSourceValue<T>(T newValue, [CallerMemberName] string propertyName = null) 
         {
-            this.dataManager.SetSourceValue(newValue, this, propertyName, () => this.NotifyChanged());
+            this.dataManager.SetSourceValue(newValue, this, propertyName, () => this.NotifyChanged(propertyName));
         }
         public T GetSourceValue<T>([CallerMemberName] string propertyName = null) 
         {
-            return this.dataManager.GetSourceValue<T>(this, propertyName, () => this.NotifyChanged());
+            return (T)this.dataManager.GetSourceValue(this, propertyName, () => this.NotifyChanged(propertyName));
         }
 
-        public T GetComputedValue<T>(Func<T> computer, [CallerMemberName] string propertyName = null) 
+        public T GetComputedValue<T>(Func<object> computer, [CallerMemberName] string propertyName = null) 
         {
-            return this.dataManager.GetComputedValue<T>(computer, this, propertyName, () => this.NotifyChanged());
+            return (T)this.dataManager.GetComputedValue(computer, this, propertyName, () => this.NotifyChanged(propertyName));
         }
     }
 }

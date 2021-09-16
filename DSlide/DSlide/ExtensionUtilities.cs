@@ -55,5 +55,16 @@ namespace DSlide
 
             throw new InvalidOperationException("The list provided was not correctly sorted, make sure that the keys are not modified after being insered in the sorted list.");
         }
+
+        public static bool AreSame(object objA, object objB)
+        {
+            if (objA == null && objB == null)
+                return true;
+
+            if (objA == null || objB == null)
+                return false;
+
+            return objA.Equals(objB);
+        }
     }
 }

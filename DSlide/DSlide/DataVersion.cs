@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DSlide
 {
-    public struct DataVersion : IEquatable<DataVersion>, IComparable, IComparable<DataVersion>
+    public class DataVersion : IEquatable<DataVersion>, IComparable, IComparable<DataVersion>
     {
         public long VersionNumber { get; set; }
         public DataManager DataManager { get; set; }
@@ -33,19 +33,19 @@ namespace DSlide
 
         public int CompareTo(DataVersion other)
         {
-            if (other.DataManager != this.DataManager)
+            if (this.DataManager != other.DataManager)
             {
                 throw new InvalidOperationException("Cannot compare two DataVersions from two different data domains.");
             }
 
-            if (other.VersionNumber == this.VersionNumber)
+            if (this.VersionNumber == other.VersionNumber)
                 return 0;
 
-            if (other.VersionNumber > this.VersionNumber)
+            if (this.VersionNumber > other.VersionNumber)
                 return 1;
 
-            Debug.Assert(other.VersionNumber < this.VersionNumber);
-            return 0;
+            Debug.Assert(this.VersionNumber < other.VersionNumber);
+            return -1;
         }
 
         public override bool Equals(object obj)
@@ -62,6 +62,26 @@ namespace DSlide
         public override int GetHashCode()
         {
             return HashCode.Combine(VersionNumber, DataManager);
+        }
+
+        public static bool operator <(DataVersion left, DataVersion right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+
+        public static bool operator <=(DataVersion left, DataVersion right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >(DataVersion left, DataVersion right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+
+        public static bool operator >=(DataVersion left, DataVersion right)
+        {
+            return left.CompareTo(right) >= 0;
         }
     }
 }

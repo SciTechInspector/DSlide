@@ -6,7 +6,6 @@ namespace DSlideTest
 {
     public class DiamondTest : BaseClass
     {
-
         public string FirstName
         {
             get
