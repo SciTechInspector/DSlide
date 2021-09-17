@@ -4,40 +4,18 @@ using System.ComponentModel;
 
 namespace DSlideTest
 {
-    public class DiamondTest : BaseClass
+    public abstract class DiamondTest : DataSlideBase
     {
-        public string FirstName
-        {
-            get
-            {
-                return base.GetSourceValue<string>();
-            }
+        public abstract string FirstName { get; set; }
 
-            set
-            {
-                base.SetSourceValue<string>(value);
-            }
-        }
+        public abstract string LastName { get; set; }
 
-        public string LastName
-        {
-            get
-            {
-                return base.GetSourceValue<string>();
-            }
+        public abstract Boolean IsMale { get; set; }
 
-            set
-            {
-                base.SetSourceValue<string>(value);
-            }
-        }
+        public virtual string FullName => $"{this.FirstName} {this.LastName}";
 
-        public Boolean IsMale { get; set; }
+        public virtual string PoliteAddress => (this.IsMale ? "Lord" : "Lady") + this.LastName;
 
-        public string FullName { get { return base.GetComputedValue<string>(() => $"{this.FirstName} {this.LastName}"); } }
-
-        public string PoliteAddress { get { return base.GetComputedValue<string>(() => (this.IsMale ? "Lord" : "Lady") + this.LastName); } }
-
-        public string MangledName { get { return base.GetComputedValue<string>(() => FullName + PoliteAddress); } }
+        public virtual string MangledName => FullName + PoliteAddress;
     }
 }

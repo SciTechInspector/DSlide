@@ -72,7 +72,7 @@ namespace DSlideTest
             var dataManager = DataManager.Current;
             var notificationTracker = new ChangeNotificationReceiver();
 
-            var obj = new DiamondTest();
+            DiamondTest obj = dataManager.CreateInstance<DiamondTest>();
             obj.PropertyChanged += notificationTracker.NotificatonHandler;
 
             Assert.IsTrue(obj.FirstName == null);

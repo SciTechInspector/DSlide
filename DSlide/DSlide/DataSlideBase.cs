@@ -4,13 +4,13 @@ using System.Runtime.CompilerServices;
 
 namespace DSlide
 {
-    public class BaseClass : INotifyPropertyChanged
+    public class DataSlideBase : INotifyPropertyChanged
     {
         protected DataManager dataManager;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public BaseClass()
+        public DataSlideBase()
         {
             this.dataManager = DataManager.Current;
         }

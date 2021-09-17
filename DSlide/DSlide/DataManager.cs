@@ -12,6 +12,8 @@ namespace DSlide
         private HashSet<DataNode> modifiedSourceDataNodes = new HashSet<DataNode>();
         private ValueComputationContext computationContext = new ValueComputationContext();
 
+        private DataContainerFactory containerFactory;
+
         [ThreadStatic]
         private static DataManager ts_DataManager;
 
@@ -35,6 +37,8 @@ namespace DSlide
         {
             this.ReadVersion = new DataVersion(1, this);
             this.EditVersion = null;
+            this.containerFactory = new DataContainerFactory();
+            this.containerFactory.CreateDerivedClasses();
         }
 
         public void SetSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
@@ -55,7 +59,7 @@ namespace DSlide
             dataNode.SetValue(newValue, this.EditVersion);
         }
 
-        public object GetSourceValue(object container, string propertyName, Action notifier) 
+        public object GetSourceValue(object container, string propertyName, Action notifier)
         {
             DataNode dataNode;
             var dataNodeKey = new DataNodeKey(container, propertyName);
@@ -74,7 +78,7 @@ namespace DSlide
             return retrievedValue;
         }
 
-        public object GetComputedValue(Func<object> computer, object container, string propertyName, Action notifier) 
+        public object GetComputedValue(Func<object> computer, object container, string propertyName, Action notifier)
         {
             DataNode dataNode;
             var dataNodeKey = new DataNodeKey(container, propertyName);
@@ -166,6 +170,11 @@ namespace DSlide
 
             foreach (var notificationToSend in notifications)
                 notificationToSend();
+        }
+
+        public T CreateInstance<T>() where T : DataSlideBase
+        {
+            return this.containerFactory.CreateDataContainerInstance<T>();
         }
     }
 }
