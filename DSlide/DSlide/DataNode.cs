@@ -39,7 +39,7 @@ namespace DSlide
 
         public void SetValue(object newValue, DataVersion version)
         {
-            Debug.Assert(this.DataHistory.Count == 0 || this.DataHistory.Keys[this.DataHistory.Count - 1] < version);
+            Debug.Assert(this.DataHistory.Count == 0 || this.DataHistory.Keys[this.DataHistory.Count - 1] <= version);
 
             if (this.DataHistory.Count != 0)
             {

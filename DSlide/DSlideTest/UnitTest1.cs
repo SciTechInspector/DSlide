@@ -137,6 +137,39 @@ namespace DSlideTest
         }
 
         [TestMethod]
+        public void PivotPropertyTests()
+        {
+            var dataManager = DataManager.Current;
+            var notificationTracker = new ChangeNotificationReceiver();
+
+            PivotDataTest obj = dataManager.CreateInstance<PivotDataTest>();
+            // obj.PropertyChanged += notificationTracker.NotificatonHandler;
+
+            dataManager.EnterEditMode();
+            obj.Data1 = "FirstData";
+            obj.Data2 = "SecondData";
+            obj.PivotTo2 = false;
+            obj.PivotToDeep = false;
+            dataManager.ExitEditMode();
+
+            Assert.IsTrue(obj.Data1 == "FirstData");
+            Assert.IsTrue(obj.Data2 == "SecondData");
+            Assert.IsTrue(obj.PivotTo2 == false);
+            Assert.IsTrue(obj.PivotToDeep == false);
+            Assert.IsTrue(obj.SimplePivot == "FirstData");
+            Assert.IsTrue(obj.TrickyPivot == "FirstDatanow");
+            Assert.IsTrue(obj.ComputeDeep5 == "FirstData1s2s3s4s5s");
+
+            dataManager.EnterEditMode();
+            obj.PivotTo2 = true;
+            obj.PivotToDeep = true;
+            dataManager.ExitEditMode();
+
+            Assert.IsTrue(obj.SimplePivot == "SecondData");
+            Assert.IsTrue(obj.TrickyPivot == "FirstData1d2d3d4d5d");
+        }
+
+        [TestMethod]
         public void TestFindNearestLessThanInSortedList()
         {
             var sorted = new SortedList<int, int>();
