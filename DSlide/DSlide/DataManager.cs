@@ -14,6 +14,8 @@ namespace DSlide
 
         private DataContainerFactory containerFactory;
 
+        private Dictionary<Key, DataSlideKeyBase> cachedGeneratedObjects = new Dictionary<Key, DataSlideKeyBase>();
+
         [ThreadStatic]
         private static DataManager ts_DataManager;
 
@@ -175,6 +177,22 @@ namespace DSlide
         public T CreateInstance<T>() where T : DataSlideBase
         {
             return this.containerFactory.CreateDataContainerInstance<T>();
+        }
+
+
+        public T CreateInstance<T>(Key key, Persistence persistence) where T : DataSlideKeyBase
+        {
+            key.ObjectType = typeof(T);
+
+            DataSlideKeyBase retVal;
+            if (!this.cachedGeneratedObjects.TryGetValue(key, out retVal))
+            {
+                retVal = this.containerFactory.CreateDataContainerInstance<T>();
+                retVal.Initialize(key);
+                this.cachedGeneratedObjects[key] = retVal;
+            }
+
+            return (T)retVal;
         }
     }
 }

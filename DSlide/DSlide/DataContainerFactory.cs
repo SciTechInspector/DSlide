@@ -81,6 +81,7 @@ namespace DSlide
         {
             var allTypes = assembliesToProcess.SelectMany(x => x.GetTypes());
             var typesToProcess = allTypes.Where(type => type != typeof(DataSlideBase) &&
+                                                        type != typeof(DataSlideKeyBase) &&
                                                         typeof(DataSlideBase).IsAssignableFrom(type));
             var allDerivedClassesCode = "";
 

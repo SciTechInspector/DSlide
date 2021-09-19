@@ -169,6 +169,134 @@ namespace DSlideTest
             Assert.IsTrue(obj.TrickyPivot == "FirstData1d2d3d4d5d");
         }
 
+        private void getMajorPivots(DataManager dataManager, PivotDataTest obj, 
+                    out ReactTimeInstance1 majorPivotTT, 
+                    out ReactTimeInstance1 majorPivotFT,
+                    out ReactTimeInstance2 majorPivotTF,
+                    out ReactTimeInstance2 majorPivotFF)
+        {
+            dataManager.EnterEditMode();
+            obj.PivotToDeep = true;
+            obj.PivotTo2 = true;
+            dataManager.ExitEditMode();
+            majorPivotTT = obj.MajorPivot as ReactTimeInstance1;
+
+            dataManager.EnterEditMode();
+            obj.PivotToDeep = false;
+            obj.PivotTo2 = true;
+            dataManager.ExitEditMode();
+            majorPivotFT = obj.MajorPivot as ReactTimeInstance1;
+
+            dataManager.EnterEditMode();
+            obj.PivotToDeep = true;
+            obj.PivotTo2 = false;
+            dataManager.ExitEditMode();
+            majorPivotTF = obj.MajorPivot as ReactTimeInstance2;
+
+            dataManager.EnterEditMode();
+            obj.PivotToDeep = false;
+            obj.PivotTo2 = false;
+            dataManager.ExitEditMode();
+            majorPivotFF = obj.MajorPivot as ReactTimeInstance2;
+        }
+
+        [TestMethod]
+        public void TestPersistedReactiveObjects()
+        {
+            var dataManager = DataManager.Current;
+            var notificationTracker = new ChangeNotificationReceiver();
+
+            PivotDataTest obj = dataManager.CreateInstance<PivotDataTest>();
+            DiamondTest diamondA = dataManager.CreateInstance<DiamondTest>();
+            DiamondTest diamondB = dataManager.CreateInstance<DiamondTest>();
+            DiamondTest diamondC = dataManager.CreateInstance<DiamondTest>();
+            DiamondTest diamondD = dataManager.CreateInstance<DiamondTest>();
+
+            dataManager.EnterEditMode();
+
+            diamondA.FirstName = "Emerald";
+            diamondA.LastName = "Green";
+
+            diamondB.FirstName = "Onyx";
+            diamondB.LastName = "Black";
+
+            diamondC.FirstName = "Ruby";
+            diamondC.LastName = "Red";
+
+            diamondD.FirstName = "Saphire";
+            diamondD.LastName = "Blue";
+
+            obj.Data1 = "FirstData";
+            obj.Data2 = "SecondData";
+            obj.PivotTo2 = false;
+            obj.PivotToDeep = false;
+
+            obj.DiamondTest1 = diamondA;
+            obj.DiamondTest2 = diamondB;
+            dataManager.ExitEditMode();
+
+            ReactTimeInstance1 majorPivotTT1, majorPivotFT1;
+            ReactTimeInstance2 majorPivotTF1, majorPivotFF1;
+            getMajorPivots(dataManager, obj, out majorPivotTT1, out majorPivotFT1, out majorPivotTF1, out majorPivotFF1);
+            Assert.IsTrue(new HashSet<DataSlideBase> { majorPivotTT1, majorPivotTF1, majorPivotFT1, majorPivotFF1 }.Count == 4);
+            Assert.IsTrue(majorPivotTT1.ResultingDataSource == "FirstData");
+            Assert.IsTrue(majorPivotFT1.ResultingDataSource == "SecondData");
+            Assert.IsTrue(majorPivotTF1.LegalDirectReference == "Emerald");
+            Assert.IsTrue(majorPivotFF1.LegalDirectReference == "Onyx");
+
+            dataManager.EnterEditMode();
+            obj.Data2 = "FirstData";
+            obj.Data1 = "SecondData";
+            dataManager.ExitEditMode();
+
+            ReactTimeInstance1 majorPivotTT2, majorPivotFT2;
+            ReactTimeInstance2 majorPivotTF2, majorPivotFF2;
+            getMajorPivots(dataManager, obj, out majorPivotTT2, out majorPivotFT2, out majorPivotTF2, out majorPivotFF2);
+            Assert.IsTrue(new HashSet<DataSlideBase> 
+                        {
+                            majorPivotTT1, majorPivotTF1, majorPivotFT1, majorPivotFF1,
+                            majorPivotTT2, majorPivotFT2, majorPivotTF2, majorPivotFF2 
+                        }.Count == 4);
+            Assert.IsTrue(majorPivotTT1 == majorPivotFT2 && majorPivotFT1 == majorPivotTT2);
+            Assert.IsTrue(majorPivotTT1 == majorPivotFT2 && majorPivotFT1 == majorPivotTT2);
+
+            dataManager.EnterEditMode();
+            obj.DiamondTest1 = diamondB;
+            obj.DiamondTest2 = diamondC;
+            dataManager.ExitEditMode();
+
+            ReactTimeInstance1 majorPivotTT3, majorPivotFT3;
+            ReactTimeInstance2 majorPivotTF3, majorPivotFF3;
+            getMajorPivots(dataManager, obj, out majorPivotTT3, out majorPivotFT3, out majorPivotTF3, out majorPivotFF3);
+            Assert.IsTrue(new HashSet<DataSlideBase>
+                        {
+                            majorPivotTT1, majorPivotTF1, majorPivotFT1, majorPivotFF1,
+                            majorPivotTT2, majorPivotFT2, majorPivotTF2, majorPivotFF2,
+                            majorPivotTT3, majorPivotFT3, majorPivotTF3, majorPivotFF3
+                        }.Count == 5);
+            Assert.IsTrue(majorPivotFF2 == majorPivotTF3);
+            Assert.IsTrue(majorPivotFF3.LegalDirectReference == "Ruby");
+
+
+            dataManager.EnterEditMode();
+            obj.Data1 = "NewDataOne";
+            obj.Data2 = "NewDataTwo";
+            dataManager.ExitEditMode();
+
+            ReactTimeInstance1 majorPivotTT4, majorPivotFT4;
+            ReactTimeInstance2 majorPivotTF4, majorPivotFF4;
+            getMajorPivots(dataManager, obj, out majorPivotTT4, out majorPivotFT4, out majorPivotTF4, out majorPivotFF4);
+            Assert.IsTrue(new HashSet<DataSlideBase>
+                        {
+                            majorPivotTT1, majorPivotTF1, majorPivotFT1, majorPivotFF1,
+                            majorPivotTT2, majorPivotFT2, majorPivotTF2, majorPivotFF2,
+                            majorPivotTT3, majorPivotFT3, majorPivotTF3, majorPivotFF3,
+                            majorPivotTT4, majorPivotFT4, majorPivotTF4, majorPivotFF4
+                        }.Count == 7);
+            Assert.IsTrue(majorPivotTT4.ResultingDataSource == "NewDataOne");
+            Assert.IsTrue(majorPivotFT4.ResultingDataSource == "NewDataTwo");
+        }
+
         [TestMethod]
         public void TestFindNearestLessThanInSortedList()
         {
