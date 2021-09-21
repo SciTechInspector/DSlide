@@ -82,6 +82,8 @@ namespace DSlide
             var allTypes = assembliesToProcess.SelectMany(x => x.GetTypes());
             var typesToProcess = allTypes.Where(type => type != typeof(DataSlideBase) &&
                                                         type != typeof(DataSlideKeyBase) &&
+                                                        type != typeof(DataSlideCollection<>) &&
+                                                        type != typeof(DataSlideGeneratedCollection<>) &&
                                                         typeof(DataSlideBase).IsAssignableFrom(type));
             var allDerivedClassesCode = "";
 
@@ -150,10 +152,32 @@ namespace DSlideGenerated
 ";
         }
 
+        private string generateTypeDeclaration(Type type)
+        {
+            if (!type.IsGenericType)
+            {
+                return type.FullName;
+            }
+
+            var fixedFullName = type.FullName.Substring(0, type.FullName.IndexOf('`')) + "<";
+            foreach (var genericType in type.GetGenericArguments())
+            {
+                var genericTypeDeclaration = this.generateTypeDeclaration(genericType);
+                fixedFullName += genericTypeDeclaration;
+                fixedFullName += ", ";
+            }
+
+            fixedFullName = fixedFullName.Substring(0, fixedFullName.Length - 2);
+
+            fixedFullName += ">";
+
+            return fixedFullName;
+        }
+
         private string generateSourceProperty(PropertyInfo property)
         {
             var propertyName = property.Name;
-            var propertyType = property.PropertyType.FullName;
+            var propertyType = this.generateTypeDeclaration(property.PropertyType);
 
             return
     $@"
@@ -175,7 +199,7 @@ namespace DSlideGenerated
         private string generateComputedProperty(PropertyInfo property)
         {
             var propertyName = property.Name;
-            var propertyType = property.PropertyType.FullName;
+            var propertyType = this.generateTypeDeclaration(property.PropertyType);
 
             return
 $@"
