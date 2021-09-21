@@ -15,8 +15,8 @@ namespace DSlide
 
         public long Height { get; set; }
 
-        public List<DataNode> DataNodesThatDependOnThisNode { get; set; } = new List<DataNode>();
-        public List<DataNode> DataNodesThatThisNodeDependsOn { get; set; } = new List<DataNode>();
+        public List<DataNode> Children { get; set; } = new List<DataNode>();
+        public List<DataNode> Parents { get; set; } = new List<DataNode>();
 
         public DataVersion UpdatedUpToVersion;
 
@@ -85,6 +85,11 @@ namespace DSlide
         public bool HasValueForVersion(DataVersion version)
         {
             return this.DataHistory.ContainsKey(version);
+        }
+
+        public bool HasValue()
+        {
+            return this.DataHistory.Count != 0;
         }
 
         public bool IsUpToDate(DataVersion version)

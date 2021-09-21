@@ -26,7 +26,7 @@ namespace DSlideTest
         {
             get
             {
-                return new DataSlideGeneratedCollection<string>(() => this.Things.Where(x => x.Contains(this.Filter)).ToList());
+                return new DataSlideGeneratedCollection<string>(() => this.Things.Where(x => x.Contains(this.Filter ?? "")).ToList());
             }
         }
 

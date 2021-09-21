@@ -15,7 +15,7 @@ namespace DSlideTest
         public void SimplePropertyTests()
         {
             var dataManager = DataManager.Current;
-            var notificationTracker = new ChangeNotificationReceiver();
+            var notificationTracker = new PropertyChangeNotificationReceiver();
 
             DiamondTest obj = dataManager.CreateInstance<DiamondTest>();
             obj.PropertyChanged += notificationTracker.NotificatonHandler;
@@ -85,10 +85,10 @@ namespace DSlideTest
         public void PivotPropertyTests()
         {
             var dataManager = DataManager.Current;
-            var notificationTracker = new ChangeNotificationReceiver();
+            var notificationTracker = new PropertyChangeNotificationReceiver();
 
             PivotDataTest obj = dataManager.CreateInstance<PivotDataTest>();
-            // obj.PropertyChanged += notificationTracker.NotificatonHandler;
+            obj.PropertyChanged += notificationTracker.NotificatonHandler;
 
             dataManager.EnterEditMode();
             obj.Data1 = "FirstData";
@@ -96,6 +96,13 @@ namespace DSlideTest
             obj.PivotTo2 = false;
             obj.PivotToDeep = false;
             dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.Data1)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.Data2)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.PivotTo2)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.PivotToDeep)));
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
 
             Assert.IsTrue(obj.Data1 == "FirstData");
             Assert.IsTrue(obj.Data2 == "SecondData");
@@ -109,8 +116,32 @@ namespace DSlideTest
             obj.PivotTo2 = true;
             obj.PivotToDeep = true;
             dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.PivotTo2)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.PivotToDeep)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.SimplePivot)));
+            Assert.IsTrue(2 == notificationTracker.CountAndClear(obj, nameof(obj.TrickyPivot)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.ComputeDeep1)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.ComputeDeep2)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.ComputeDeep3)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.ComputeDeep4)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.ComputeDeep5)));
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
 
             Assert.IsTrue(obj.SimplePivot == "SecondData");
+            Assert.IsTrue(obj.TrickyPivot == "FirstData1d2d3d4d5d");
+
+            dataManager.EnterEditMode();
+            obj.Data2 = "Changed Data 2";
+            dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.Data2)));
+            Assert.IsTrue(1 == notificationTracker.CountAndClear(obj, nameof(obj.SimplePivot)));
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
+
+            Assert.IsTrue(obj.SimplePivot == "Changed Data 2");
             Assert.IsTrue(obj.TrickyPivot == "FirstData1d2d3d4d5d");
         }
 
@@ -149,7 +180,7 @@ namespace DSlideTest
         public void TestPersistedReactiveObjects()
         {
             var dataManager = DataManager.Current;
-            var notificationTracker = new ChangeNotificationReceiver();
+            var notificationTracker = new PropertyChangeNotificationReceiver();
 
             PivotDataTest obj = dataManager.CreateInstance<PivotDataTest>();
             DiamondTest diamondA = dataManager.CreateInstance<DiamondTest>();

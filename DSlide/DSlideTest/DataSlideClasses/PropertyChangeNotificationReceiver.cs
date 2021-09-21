@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DSlideTest
 {
-    public class ChangeNotificationReceiver
+    public class PropertyChangeNotificationReceiver
     {
         public Dictionary<object, List<string>> receivedNotifications = new Dictionary<object, List<string>>();
 

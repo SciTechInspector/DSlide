@@ -92,7 +92,7 @@ namespace DSlide
 
             this.computationContext.RegisterDependency(dataNode);
 
-            if (dataNode.HasValueForVersion(this.ReadVersion))
+            if (dataNode.HasValue())
             {
                 var retrievedValue = dataNode.GetValue(ReadVersion);
                 if (retrievedValue == null)
@@ -119,9 +119,6 @@ namespace DSlide
             this.ReadVersion = this.EditVersion;
             this.EditVersion = null;
 
-
-            HashSet<DataNode> processedNodes = new HashSet<DataNode>();
-
             SortedList<long, HashSet<DataNode>> dataNodesToProcess = new SortedList<long, HashSet<DataNode>>();
 
             dataNodesToProcess[0] = this.modifiedSourceDataNodes;
@@ -141,7 +138,9 @@ namespace DSlide
 
                 if (processNode.IsComputedData())
                 {
+                    this.computationContext.EnterDataNodeComputation(processNode);
                     var newValue = processNode.Computer();
+                    this.computationContext.ExitDataNodeComputation(processNode);
                     processNode.SetValue(newValue, this.ReadVersion);
                 }
 
@@ -151,7 +150,7 @@ namespace DSlide
                 // TODO: Prepare/send change notification
                 changeNotificationsToSend.Add(processNode.NotifyChanged);
 
-                foreach (var dependOnNode in processNode.DataNodesThatDependOnThisNode)
+                foreach (var dependOnNode in processNode.Children)
                 {
                     HashSet<DataNode> nodesToProcessOfDependOnHeight;
                     if (!dataNodesToProcess.TryGetValue(dependOnNode.Height, out nodesToProcessOfDependOnHeight))

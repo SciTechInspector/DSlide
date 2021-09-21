@@ -1,34 +1,48 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
 using System.Text;
 
 namespace DSlide
 {
 
-    public class DataSlideCollection<T> : DataSlideBase, IEnumerable<T>, IList<T>, IReadOnlyList<T>
+    public class DataSlideCollection<T> : DataSlideBase, INotifyCollectionChanged, IEnumerable<T>, IList<T>, IReadOnlyList<T>
     {
         private List<T> internalList = new List<T>();
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         protected IEnumerable<T> Enumerator 
         {
             get
             {
-                return base.GetSourceValue<IEnumerable<T>>();
+                return base.GetSourceValue<IEnumerable<T>>(NotifyCollectionAndPropertyChanged);
             }
 
             set
             {
-                base.SetSourceValue<IEnumerable<T>>(value);
+                base.SetSourceValue<IEnumerable<T>>(value, NotifyCollectionAndPropertyChanged);
             }
         }
 
 
         public T this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public int Count => throw new NotImplementedException();
+        public virtual int Count
+        {
+            get
+            {
+                var enumerator = this.Enumerator;
+                if (enumerator != null)
+                    return this.internalList.Count;
 
-        public bool IsReadOnly => throw new NotImplementedException();
+                return 0;
+            }
+        }
+
+        public bool IsReadOnly => false;
 
         public void Add(T item)
         {
@@ -66,7 +80,7 @@ namespace DSlide
 
         public IEnumerator<T> GetEnumerator()
         {
-            return this.Enumerator.GetEnumerator();
+            return this.Enumerator?.GetEnumerator() ?? Enumerable.Empty<T>().GetEnumerator();
         }
 
         public int IndexOf(T item)
@@ -103,6 +117,14 @@ namespace DSlide
         {
             return this.Enumerator.GetEnumerator();
         }
+
+        private void NotifyCollectionAndPropertyChanged()
+        {
+            SendNotification(new System.ComponentModel.PropertyChangedEventArgs(nameof(Enumerator)));
+            this.CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            this.CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, this.internalList.ToList()));
+        }
+
     }
 
 }

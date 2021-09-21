@@ -19,10 +19,10 @@ namespace DSlide
         {
             Debug.Assert(!this.ComputedValuesStack.Contains(node));
 
-            foreach (var dependency in node.DataNodesThatDependOnThisNode)
-                dependency.DataNodesThatThisNodeDependsOn.Remove(node);
+            foreach (var parent in node.Parents)
+                parent.Children.Remove(node);
 
-            node.DataNodesThatDependOnThisNode.Clear();
+            node.Parents.Clear();
             node.Height = 1;
 
             this.ComputedValuesStack.Add(node);
@@ -32,6 +32,8 @@ namespace DSlide
         {
             Debug.Assert(this.ComputedValuesStack[this.ComputedValuesStack.Count - 1] == node);
             this.ComputedValuesStack.RemoveAt(this.ComputedValuesStack.Count - 1);
+
+            node.Height = node.Parents.Count == 0 ? 1 : node.Parents.Max(x => x.Height) + 1;
         }
 
         public void RegisterDependency(DataNode dataNode)
@@ -40,13 +42,8 @@ namespace DSlide
                 return;
 
             var curNode = ComputedValuesStack[this.ComputedValuesStack.Count - 1];
-            curNode.DataNodesThatThisNodeDependsOn.Add(dataNode);
-            dataNode.DataNodesThatDependOnThisNode.Add(curNode);
-
-            if (dataNode.Height >= curNode.Height)
-            {
-                curNode.Height = dataNode.Height + 1;
-            }
+            curNode.Parents.Add(dataNode);
+            dataNode.Children.Add(curNode);
         }
     }
 }

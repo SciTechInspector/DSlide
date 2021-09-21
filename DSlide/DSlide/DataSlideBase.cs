@@ -15,24 +15,30 @@ namespace DSlide
             this.dataManager = DataManager.Current;
         }
 
+        protected void SendNotification(PropertyChangedEventArgs args)
+        {
+            this.PropertyChanged?.Invoke(this, args);
+        }
+
+
 
         public void NotifyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void SetSourceValue<T>(T newValue, [CallerMemberName] string propertyName = null) 
+        public void SetSourceValue<T>(T newValue, Action doNotify = null,[CallerMemberName] string propertyName = null) 
         {
-            this.dataManager.SetSourceValue(newValue, this, propertyName, () => this.NotifyChanged(propertyName));
+            this.dataManager.SetSourceValue(newValue, this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
         }
-        public T GetSourceValue<T>([CallerMemberName] string propertyName = null) 
+        public T GetSourceValue<T>(Action doNotify = null, [CallerMemberName] string propertyName = null) 
         {
-            return (T)this.dataManager.GetSourceValue(this, propertyName, () => this.NotifyChanged(propertyName));
+            return (T)this.dataManager.GetSourceValue(this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
         }
 
-        public T GetComputedValue<T>(Func<object> computer, [CallerMemberName] string propertyName = null) 
+        public T GetComputedValue<T>(Func<object> computer, Action doNotify = null, [CallerMemberName] string propertyName = null) 
         {
-            return (T)this.dataManager.GetComputedValue(computer, this, propertyName, () => this.NotifyChanged(propertyName));
+            return (T)this.dataManager.GetComputedValue(computer, this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
         }
     }
 }
