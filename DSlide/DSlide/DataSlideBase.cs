@@ -33,12 +33,16 @@ namespace DSlide
         }
         public T GetSourceValue<T>(Action doNotify = null, [CallerMemberName] string propertyName = null) 
         {
-            return (T)this.dataManager.GetSourceValue(this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
+            var retVal = this.dataManager.GetSourceValue(this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
+
+            return (T)(retVal ?? default(T));
         }
 
         public T GetComputedValue<T>(Func<object> computer, Action doNotify = null, [CallerMemberName] string propertyName = null) 
         {
-            return (T)this.dataManager.GetComputedValue(computer, this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
+            var retVal = this.dataManager.GetComputedValue(computer, this, propertyName, doNotify ?? (() => this.NotifyChanged(propertyName)));
+
+            return (T)(retVal ?? default(T));
         }
     }
 }
