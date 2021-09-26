@@ -28,7 +28,23 @@ namespace DSlide
         }
 
 
-        public T this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public T this[int index]
+        {
+            get
+            {
+                var enumerator = this.Enumerator;
+                if (enumerator != null)
+                    return this.internalList[index];
+
+                return default(T);
+            }
+
+            set
+            {
+                this.internalList[index] = value;
+                this.Enumerator = this.makeNewEnumerator();
+            }
+        }
 
         public virtual int Count
         {
