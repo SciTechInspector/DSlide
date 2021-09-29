@@ -30,5 +30,10 @@ namespace DSlide
         {
             return HashCode.Combine(Container, PropertyName);
         }
+
+        public override string ToString()
+        {
+            return Container.ToString() + "|" + PropertyName;
+        }
     }
 }

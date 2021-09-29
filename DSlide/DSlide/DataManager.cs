@@ -43,6 +43,45 @@ namespace DSlide
             this.containerFactory.CreateDerivedClasses();
         }
 
+        public void ConvertToComputedValue(Func<object> computer, object container, string propertyName, Action notifier)
+        {
+            DataNode dataNode;
+            var dataNodeKey = new DataNodeKey(container, propertyName);
+            if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
+            {
+                dataNode = new DataNode(dataNodeKey, computer, notifier);
+                this.allDataNodes[dataNodeKey] = dataNode;
+            }
+            else
+            {
+                dataNode.Computer = computer;
+            }
+
+            modifiedSourceDataNodes.Add(dataNode);
+        }
+
+        public void ConvertToSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
+        {
+            if (this.EditVersion == null)
+                throw new InvalidOperationException("Cannot modify a source value ouside of edit mode.");
+
+            DataNode dataNode;
+            var dataNodeKey = new DataNodeKey(container, propertyName);
+            if (!this.allDataNodes.TryGetValue(dataNodeKey, out dataNode))
+            {
+                dataNode = new DataNode(dataNodeKey, notifier);
+                this.allDataNodes[dataNodeKey] = dataNode;
+            }
+            else
+            {
+                dataNode.Computer = null;
+            }
+
+            this.modifiedSourceDataNodes.Add(dataNode);
+
+            dataNode.SetValue(newValue, this.EditVersion);
+        }
+
         public void SetSourceValue<T>(T newValue, object container, string propertyName, Action notifier)
         {
             if (this.EditVersion == null)

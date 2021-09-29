@@ -44,5 +44,15 @@ namespace DSlide
 
             return (T)(retVal ?? default(T));
         }
+
+        public void ConvertToComputedValue(Func<object> computer, string propertyName)
+        {
+            this.dataManager.ConvertToComputedValue(computer, this, propertyName, () => this.NotifyChanged(propertyName));
+        }
+
+        public void ConvertToSourceValue<T>(T newValue, string propertyName)
+        {
+            this.dataManager.ConvertToSourceValue<T>(newValue, this, propertyName, () => this.NotifyChanged(propertyName));
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace DSlide
@@ -103,6 +104,14 @@ namespace DSlide
         public bool IsComputedData()
         {
             return this.Computer != null;
+        }
+
+        public override string ToString()
+        {
+            if (this.DataHistory.Count > 0)
+                return this.NodeKey.ToString() + ": " + this.DataHistory.Values.Last().ToString();
+
+            return this.NodeKey.ToString() + ": <no value>";
         }
     }
 }

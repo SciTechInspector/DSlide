@@ -12,73 +12,81 @@ namespace DSlideTest
     {
 
         [TestMethod]
-        public void SimplePropertyTests()
+        public void TestBindUnBind()
         {
             var dataManager = DataManager.Current;
             var notificationTracker = new PropertyChangeNotificationReceiver();
 
-            DiamondTest obj = dataManager.CreateInstance<DiamondTest>();
-            obj.PropertyChanged += notificationTracker.NotificatonHandler;
+            DiamondTest obj1 = dataManager.CreateInstance<DiamondTest>();
+            DiamondTest obj2 = dataManager.CreateInstance<DiamondTest>();
+            obj1.PropertyChanged += notificationTracker.NotificatonHandler;
+            obj2.PropertyChanged += notificationTracker.NotificatonHandler;
 
-            Assert.IsTrue(obj.FirstName == null);
-            Assert.IsTrue(obj.LastName == null);
+            Assert.IsTrue(obj1.FirstName == null);
+            Assert.IsTrue(obj1.LastName == null);
 
             dataManager.EnterEditMode();
-            obj.FirstName = "Bob";
-            obj.LastName = "Morane";
+            obj1.FirstName = "Bob";
+            obj1.LastName = "Morane";
 
-            Assert.IsTrue(obj.FirstName == null);
-            Assert.IsTrue(obj.LastName == null);
+            obj2.FirstName = "Bill";
+            obj2.LastName = "Jaune";
+
+            Assert.IsTrue(obj1.FirstName == null);
+            Assert.IsTrue(obj1.LastName == null);
             dataManager.ExitEditMode();
             dataManager.SendChangeNotifications();
 
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "FirstName") == 1);
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "LastName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "LastName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj2, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj2, "LastName") == 1);
             Assert.IsTrue(notificationTracker.TotalCount() == 0);
 
-            Assert.IsTrue(obj.FirstName == "Bob");
-            Assert.IsTrue(obj.LastName == "Morane");
+            Assert.IsTrue(obj1.FirstName == "Bob");
+            Assert.IsTrue(obj1.LastName == "Morane");
 
-            Assert.IsTrue(obj.FullName == "Bob Morane");
+            Assert.IsTrue(obj1.FullName == "Bob Morane");
+
+            Assert.IsTrue(obj2.FirstName == "Bill");
+            Assert.IsTrue(obj2.LastName == "Jaune");
+
+            Assert.IsTrue(obj2.FullName == "Bill Jaune");
+            Assert.IsTrue(obj2.MangledName == "Bill JauneLadyJaune");
 
             dataManager.EnterEditMode();
-            obj.FirstName = "Bill";
-            obj.LastName = "Balantine";
+            obj1.FirstName = "Ombre";
+            obj1.LastName = "Jaune";
 
-            Assert.IsTrue(obj.FirstName == "Bob");
-            Assert.IsTrue(obj.LastName == "Morane");
+            obj2.ConvertToComputedValue(() => obj1.FullName, nameof(obj2.FirstName));
+            obj2.ConvertToComputedValue(() => obj1.LastName, nameof(obj2.LastName));
+            obj2.ConvertToSourceValue("Bllel Balelfejnie", nameof(obj2.MangledName));
 
-            Assert.IsTrue(obj.FullName == "Bob Morane");
+            Assert.IsTrue(obj1.FirstName == "Bob");
+            Assert.IsTrue(obj1.LastName == "Morane");
+
+            Assert.IsTrue(obj1.FullName == "Bob Morane");
 
             dataManager.ExitEditMode();
             dataManager.SendChangeNotifications();
 
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "FirstName") == 1);
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "LastName") == 1);
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "FullName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "LastName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FullName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj2, "FirstName") == 2);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj2, "FullName") == 2);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj2, "MangledName") == 3);
             Assert.IsTrue(notificationTracker.TotalCount() == 0);
 
 
-            Assert.IsTrue(obj.FirstName == "Bill");
-            Assert.IsTrue(obj.LastName == "Balantine");
+            Assert.IsTrue(obj1.FirstName == "Ombre");
+            Assert.IsTrue(obj1.LastName == "Jaune");
+            Assert.IsTrue(obj1.FullName == "Ombre Jaune");
 
-            Assert.IsTrue(obj.FullName == "Bill Balantine");
-
-            dataManager.EnterEditMode();
-            obj.FirstName = "Bob";
-
-            dataManager.ExitEditMode();
-            dataManager.SendChangeNotifications();
-
-
-            Assert.IsTrue(obj.FirstName == "Bob");
-            Assert.IsTrue(obj.LastName == "Balantine");
-
-            Assert.IsTrue(obj.FullName == "Bob Balantine");
-
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "FirstName") == 1);
-            Assert.IsTrue(notificationTracker.CountAndClear(obj, "FullName") == 1);
-            Assert.IsTrue(notificationTracker.TotalCount() == 0);
+            Assert.IsTrue(obj2.FirstName == "Ombre Jaune");
+            Assert.IsTrue(obj2.LastName == "Jaune");
+            Assert.IsTrue(obj2.FullName == "Ombre Jaune Jaune");
+            Assert.IsTrue(obj2.MangledName == "Bllel Balelfejnie");
         }
 
         [TestMethod]
@@ -145,8 +153,8 @@ namespace DSlideTest
             Assert.IsTrue(obj.TrickyPivot == "FirstData1d2d3d4d5d");
         }
 
-        private void getMajorPivots(DataManager dataManager, PivotDataTest obj, 
-                    out ReactTimeInstance1 majorPivotTT, 
+        private void getMajorPivots(DataManager dataManager, PivotDataTest obj,
+                    out ReactTimeInstance1 majorPivotTT,
                     out ReactTimeInstance1 majorPivotFT,
                     out ReactTimeInstance2 majorPivotTF,
                     out ReactTimeInstance2 majorPivotFF)
@@ -228,10 +236,10 @@ namespace DSlideTest
             ReactTimeInstance1 majorPivotTT2, majorPivotFT2;
             ReactTimeInstance2 majorPivotTF2, majorPivotFF2;
             getMajorPivots(dataManager, obj, out majorPivotTT2, out majorPivotFT2, out majorPivotTF2, out majorPivotFF2);
-            Assert.IsTrue(new HashSet<DataSlideBase> 
+            Assert.IsTrue(new HashSet<DataSlideBase>
                         {
                             majorPivotTT1, majorPivotTF1, majorPivotFT1, majorPivotFF1,
-                            majorPivotTT2, majorPivotFT2, majorPivotTF2, majorPivotFF2 
+                            majorPivotTT2, majorPivotFT2, majorPivotTF2, majorPivotFF2
                         }.Count == 4);
             Assert.IsTrue(majorPivotTT1 == majorPivotFT2 && majorPivotFT1 == majorPivotTT2);
             Assert.IsTrue(majorPivotTT1 == majorPivotFT2 && majorPivotFT1 == majorPivotTT2);
@@ -327,6 +335,77 @@ namespace DSlideTest
             Assert.IsTrue(sorted.FindIndexOfNearestLessOrEqualToKey(191) == 4);
             Assert.IsTrue(sorted.FindIndexOfNearestLessOrEqualToKey(192) == 5);
             Assert.IsTrue(sorted.FindIndexOfNearestLessOrEqualToKey(193) == 5);
+        }
+
+
+        [TestMethod]
+        public void SimplePropertyTests()
+        {
+            var dataManager = DataManager.Current;
+            var notificationTracker = new PropertyChangeNotificationReceiver();
+
+            DiamondTest obj1 = dataManager.CreateInstance<DiamondTest>();
+            obj1.PropertyChanged += notificationTracker.NotificatonHandler;
+
+            Assert.IsTrue(obj1.FirstName == null);
+            Assert.IsTrue(obj1.LastName == null);
+
+            dataManager.EnterEditMode();
+            obj1.FirstName = "Bob";
+            obj1.LastName = "Morane";
+
+            Assert.IsTrue(obj1.FirstName == null);
+            Assert.IsTrue(obj1.LastName == null);
+            dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "LastName") == 1);
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
+
+            Assert.IsTrue(obj1.FirstName == "Bob");
+            Assert.IsTrue(obj1.LastName == "Morane");
+
+            Assert.IsTrue(obj1.FullName == "Bob Morane");
+
+            dataManager.EnterEditMode();
+            obj1.FirstName = "Bill";
+            obj1.LastName = "Balantine";
+
+            Assert.IsTrue(obj1.FirstName == "Bob");
+            Assert.IsTrue(obj1.LastName == "Morane");
+
+            Assert.IsTrue(obj1.FullName == "Bob Morane");
+
+            dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "LastName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FullName") == 1);
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
+
+
+            Assert.IsTrue(obj1.FirstName == "Bill");
+            Assert.IsTrue(obj1.LastName == "Balantine");
+
+            Assert.IsTrue(obj1.FullName == "Bill Balantine");
+
+            dataManager.EnterEditMode();
+            obj1.FirstName = "Bob";
+
+            dataManager.ExitEditMode();
+            dataManager.SendChangeNotifications();
+
+
+            Assert.IsTrue(obj1.FirstName == "Bob");
+            Assert.IsTrue(obj1.LastName == "Balantine");
+
+            Assert.IsTrue(obj1.FullName == "Bob Balantine");
+
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FirstName") == 1);
+            Assert.IsTrue(notificationTracker.CountAndClear(obj1, "FullName") == 1);
+            Assert.IsTrue(notificationTracker.TotalCount() == 0);
         }
     }
 }
